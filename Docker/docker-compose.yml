@@ -1,0 +1,6 @@
+version: '2'
+services:
+    elasticsearch:
+        image: kuzzleio/elasticsearch:2.3.4
+        ports:
+          - "9500:9200"
