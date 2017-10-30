@@ -39,7 +39,7 @@ Nous allons ajouter express à nos dépendances :
 le --save permet d'indiquer à npm qu'il doit sauvegarder la dépendance fraichement installée dans le composer.json.
 
 Vous devriez avoir un dossier node_modules qui contient la librairie de Express. Supprimons la.
-Maintenant vous avez votre `composer.json`, mais pas les dépendances de votre projet. 
+Maintenant vous avez votre `package.json`, mais pas les dépendances de votre projet. 
 
 Refaites un `npm install` sans autre argument. NPM va aller installer lire les dépendences de votre fichier composer.json et installer toutes les dépendances de votre projet
 
