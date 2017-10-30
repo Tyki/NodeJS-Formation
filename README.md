@@ -1,5 +1,12 @@
 # Avant de commencer
 
+Faites : 
+```
+cd ~/workspace
+git clone git@github.com:Tyki/NodeJS-Formation.git
+cd NodeJS-Formation
+```
+
 Nous allons vérifier que votre poste possède node.
 Pour ca, faites un :
 
