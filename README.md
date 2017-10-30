@@ -1,74 +1,129 @@
-# Allons plus loin
+# (Re)Structuration du code
 
-Maintenant que l'on voit comment fonctionne une callback, nous allons faire notre propre REST API qui va faire une calculatrice
+## Introduction
 
-Pour cela, nous allons avoir besoin de `Express`. Il s'agit d'un framework qui permet de déclarer des routes HTTP et de fournir un résultat.
+Jusqu'à présent nous avons mis tout le code dans un seul fichier. Vous vous en doutez, ca ne se passe jamais comme ca ! 
 
-## Premier étape, Express 
+Globalement, il y a deux écoles pour l'architecture des fichiers : 
+- Une organisation par "feature"
+- Une organisation par type de fichier
 
-On recommence, on va créer un package.json. Je vous laisse le créer :)
-
-## Deuxième étape, déclarer la route ! 
-
-Il va falloir écrire le code pour déclarer notre nouvelle route.
-Créez un fichier index.js dans lequel nous allons mettre ce code : 
+Une organisation par feature, ressemble à ca : 
+```
+.
+├── bdd
+│   ├── controller.js
+│   ├── helper.js
+│   └── repository.js
+└── users
+    ├── controller.js
+    ├── helper.js
+    └── repository.js
 
 ```
-const express = require('express')
-const app = express()
 
-app.get('/', function (req, res) {
-  res.send('Hello World!')
-})
+Une organisation par type de fichier ressemble à cela : 
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
-})
+```
+├── controllers
+│   ├── bddController.js
+│   └── userController.js
+├── helpers
+│   ├── bddHelper.js
+│   └── userHelper.js
+└── repositories
+    ├── bddRepository.js
+    └── userRepository.js
+
 ```
 
-et on teste ! 
+Personnellement je préfère la version d'organisation par type de fichier, ca permet de savoir exactement ou sont les fichiers. De plus, s'il y à un grand nombre de features, le nombre de dossiers peut tres vite exploser.
 
-> Ca plante, pourquoi ?!
 
-Express, en opposition à fs, n'est pas une librairie fournie avec NodeJS. Nous devons l'installer, c'est la qu'entre en jeu le package.json
+# Reprenons notre code
 
-Nous allons ajouter express à nos dépendances : 
+Nous avions tout dans notre fichier `index.js` dans le dossier serveur. 
+Le but de cet exercice est de ranger correctement et de réferencer les fonctions utilisées à travers diffèrents fichiers JS
 
-`npm install --save express`
+Nous allons déplacer notre fonction calculatrice dans un dossier `helpers/calculatriceHelper.js`
 
-le --save permet d'indiquer à npm qu'il doit sauvegarder la dépendance fraichement installée dans le package.json.
+Les routes sont notre point d'entrée. Nous pouvons mettre le fichier javascript `index.js` à la racine du projet ou dans un dossier `lib` (nommé ainsi par convention). Nous allons le mettre à la racine du projet ainsi que le fichier `package.json` qui se trouve toujours à la racine normalement.
 
-Vous devriez avoir un dossier node_modules qui contient la librairie de Express. Supprimons la.
-Maintenant vous avez votre `package.json`, mais pas les dépendances de votre projet. 
+Tant qu'à faire, nous allons créer un controller afin que la gestion des routes ne fasse qu'une seule chose : appeller le bon controller et lasiser le travail au controlleur.
 
-Refaites un `npm install` sans autre argument. NPM va aller installer lire les dépendences de votre fichier package.json et installer toutes les dépendances de votre projet
+Il faut dont créer le dossier `Controllers` et y rajouter un fichier `calculatriceController.js` qui va se charger de prendre en parametre la `requete` et la `reponse`.
 
-## OK, maintenant ca fonctionne ! 
-
-Maintenant que notre serveur tourne, écrivons le code de notre calculatrice
-
-Rajouter ce code à la fin du fichier
+Vous devriez vous retrouver avec cette architecture la : 
 ```
-var calculatrice = function (a, b) {
-  return a + b 
+.
+├── controllers
+│   └── calculatriceController.js
+├── helpers
+│   └── calculatriceHelper.js
+├── node_modules
+│   └── .... // Dépendances
+├── index.js
+├── package.json
+└── README.md
+
+```
+## Ok, maintenant qui fait quoi?
+
+Nous avons notre architecture qui ressemble à quelque chose, il va falloir réparer ce que nous avons cassé.
+
+On va commencer par le controller.
+
+> Que va faire le controller?
+
+Il va recevoir l'objet `request` et l'objet `response` en parametre, et c'est lui qui va se charger d'appeller le helper pour faire le calcul des parametres.
+
+> Que va faire la callback de la route ?
+
+Elle va simplement retourner le résultat de l'appel au controleur.
+
+> Que va faire le helper?
+
+Il va simplement prendre deux nombres en parametres et rendre le calcul
+
+# C'est parti ! 
+
+De quoi à besoin le controller? Du Helper. 
+
+Pour récuperer le contenu du helper, il est possible de faire un `require();` sur un fichier. En l'occurrence ici, nous allons avoir un `const helper = require('../helpers/calculatriceHelper');`
+
+> Ouai, super, j'ai le contenu de mon fichier, et après?
+
+Dans la variable `helper`, il n'y aura que des fonctions qui auront été **exposées** dans le fichier calculatriceHelper.js.
+
+Pour dire que l'on souhaite que la fonction soit utilisable par d'autres fichiers js, il faut utiliser : 
+
+```
+module.exports = {
+  maFonction: maFonction
 }
+``` 
 
-console.log(calculatrice(2, 3))
-```
+Cela signifie que dans le fichier calculatriceHelper.js exporte (ou expose) la fonction à qui veut l'utiliser.
 
-Rien de fou, on déclare une fonction qui va faire l'addition de deux nombres.
-On vérifie que ca marche, vous devriez avoir un '5' qui apparait dans la console
+C'est ce qu'on appelle le *module pattern*. Un WS a été mené par Pierre Cavalet sur ce sujet, dispo dans confluence.
 
-## On modifie notre route pour avoir des query parameters
-
-On va faire en sorte que ce soit dynamique ! Rajoutons des parametres à notre route. Modifiez le code de la route comme ceci : 
+Reprenons le code de notre controller, il va ressembler à cela : 
 
 ```
-app.get('/:number1/:number2', function (req, res) {
-  ...
- }
+const calculatriceHelper = require('../helpers/calculatriceHelper')
+
+function doAddition(req, res) {
+  const number1 = req.params.number1
+  const number2 = req.params.number2
+
+  let result = calculatriceHelper.addition(number1, number2)
+
+  return res.send(result)
+}
 ```
 
-Pour récuperer les parametres, ils se trouvent dans `req.params`.
+Maintenant notre controller est capable d'utiliser la fonction `addition` et de lui fournir les parametres.
 
-Exercice : faire en sorte que ca affiche le resultat de l'addition dans le retour de l'appel 
+# Exercice
+
+Faites la meme chose pour que la fonction callback de la route execute la fonction `doAddition` de notre tout nouveau controlleur. 
