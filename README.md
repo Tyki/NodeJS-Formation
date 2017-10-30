@@ -30,13 +30,13 @@ et on teste !
 
 > Ca plante, pourquoi ?!
 
-Express, en opposition à fs, n'est pas une librairie fournie avec NodeJS. Nous devons l'installer, c'est la qu'entre en jeu le composer.json
+Express, en opposition à fs, n'est pas une librairie fournie avec NodeJS. Nous devons l'installer, c'est la qu'entre en jeu le package.json
 
 Nous allons ajouter express à nos dépendances : 
 
 `npm install --save express`
 
-le --save permet d'indiquer à npm qu'il doit sauvegarder la dépendance fraichement installée dans le composer.json.
+le --save permet d'indiquer à npm qu'il doit sauvegarder la dépendance fraichement installée dans le package.json.
 
 Vous devriez avoir un dossier node_modules qui contient la librairie de Express. Supprimons la.
 Maintenant vous avez votre `package.json`, mais pas les dépendances de votre projet. 
