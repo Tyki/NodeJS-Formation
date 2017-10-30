@@ -1,108 +1,74 @@
-# Avant de commencer
+# Allons plus loin
 
-Faites : 
+Maintenant que l'on voit comment fonctionne une callback, nous allons faire notre propre REST API qui va faire une calculatrice
+
+Pour cela, nous allons avoir besoin de `Express`. Il s'agit d'un framework qui permet de déclarer des routes HTTP et de fournir un résultat.
+
+## Premier étape, Express 
+
+On recommence, on va créer un package.json. Je vous laisse le créer :)
+
+## Deuxième étape, déclarer la route ! 
+
+Il va falloir écrire le code pour déclarer notre nouvelle route.
+Créez un fichier index.js dans lequel nous allons mettre ce code : 
+
 ```
-cd ~/workspace
-git clone git@github.com:Tyki/NodeJS-Formation.git
-cd NodeJS-Formation
+const express = require('express')
+const app = express()
+
+app.get('/', function (req, res) {
+  res.send('Hello World!')
+})
+
+app.listen(3000, function () {
+  console.log('Example app listening on port 3000!')
+})
 ```
 
-Nous allons vérifier que votre poste possède node.
-Pour ca, faites un :
+et on teste ! 
 
-`nvm -h` 
+> Ca plante, pourquoi ?!
 
-Si vous n'avez NVM, il faut l'installer :
-https://github.com/creationix/nvm/blob/master/README.md#installation
+Express, en opposition à fs, n'est pas une librairie fournie avec NodeJS. Nous devons l'installer, c'est la qu'entre en jeu le composer.json
 
-Ce package permettra de choisir facilement votre version de Node que vous souhaitez sur votre poste.
+Nous allons ajouter express à nos dépendances : 
 
-Nous allons installer Node 6 : 
-`nvm install 6.9.5`
+`npm install --save express`
 
-Vous devriez maintenant pouvoir faire un :
+le --save permet d'indiquer à npm qu'il doit sauvegarder la dépendance fraichement installée dans le composer.json.
 
-`node -v`
+Vous devriez avoir un dossier node_modules qui contient la librairie de Express. Supprimons la.
+Maintenant vous avez votre `composer.json`, mais pas les dépendances de votre projet. 
 
-$ v6.9.5
+Refaites un `npm install` sans autre argument. NPM va aller installer lire les dépendences de votre fichier composer.json et installer toutes les dépendances de votre projet
 
+## OK, maintenant ca fonctionne ! 
 
-`npm -v`
+Maintenant que notre serveur tourne, écrivons le code de notre calculatrice
 
-$ 3.10.10
+Rajouter ce code à la fin du fichier
+```
+var calculatrice = function (a, b) {
+  return a + b 
+}
 
-# Le plus simple : un Hello world
+console.log(calculatrice(2, 3))
+```
 
-Commencons par quelque chose de simple. Nous allons faire le mythique Hello World en nodeJS
+Rien de fou, on déclare une fonction qui va faire l'addition de deux nombres.
+On vérifie que ca marche, vous devriez avoir un '5' qui apparait dans la console
 
-Pour ca, créer un fichier index.js. Oui, du JS coté serveur :)
-Vous n'avez plus qu'à afficher sur la sortie standard notre "Hello world"
+## On modifie notre route pour avoir des query parameters
 
-Oui mais comment?
-Simplement en faisant un :
+On va faire en sorte que ce soit dynamique ! Rajoutons des parametres à notre route. Modifiez le code de la route comme ceci : 
 
-`console.log('Hello world');`
+```
+app.get('/:number1/:number2', function (req, res) {
+  ...
+ }
+```
 
-Il ne vous reste plus qu'à éxécuter ce script avec Node
+Pour récuperer les parametres, ils se trouvent dans `req.params`.
 
-`node index.js`
-
-Vous devriez avoir sur la sortie standard : 
-> Hello world
-
-Rien de plus simple ! 
-
-# Présentation de NodeJS
-
-NodeJS, qu'est ce que c'est ?
-
-> Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine. Node.js uses an event-driven, non-blocking I/O model that makes it lightweight and efficient. Node.js' package ecosystem, npm, is the largest ecosystem of open source libraries in the world.
-
-On peut en extraire plusieurs mots clés :
-
-> JavaScript runtime built
-
-Pas de compilation du code, il est éxécuté au runtime
-
-> Event-driven model
-
-NodeJS est basé sur un système d'événements qui permettent d'avoir et d'effectuer des cycles de vie en fonction de la vie du code. Ca se rapproche du `addEventListener` que l'on pourrait faire dans du JS front.
-
-> non-blocking I/O model
-
-Avec Apache et PHP, un fork va etre mis en place à chaque requête entrante et le code de la requete entrante sera éxécuté dans ce thread (contexte). NodeJS est éxécuté sur un seul et unique thread. Donc admettons qu'on effectue une tache asynchrone, ce n'est pas envisageable de bloquer les autres traitements afin d'attendre le retour de cet appel. C'est pour cela qu'il s'agit d'un model non bloquant.
-
-![](http://www.techthali.org/wp-content/uploads/2012/07/npm8.png)
-
-**J'insiste sur le fait que NodeJS est ASYNCHRONE. Il faut toujours garder à l'esprit que le code est NON-bloquant**
-
-Nous verrons plus tard comment gêrer ce modele non bloquant qui est diffèrent de PHP qui force le coté synchrone par défaut
-
-> Node.js' package ecosystem
-
-La où on a composer avec packagist en PHP, on retrouve dans l'écosysteme Node  l'outil de gestion de package NPM qui permet de faire comme composer mais dans un projet Nodejs
-
-** Ce n'est pas un framework, c'est un langage**
-
- ## Pourquoi utiliser NodeJS?
-
-- Pour le coté Asynchrone, NodeJS étant basé sur de l'événementiel, cela correspond parfaitement pour des traitements avec des appels à des webservices par exemple
-
-- Faire des API. Si on compare une API développée en Symfony vs Node (Ce n'est pas un framework), on va avoir une rapidité de par le fait qu'il ne faut pas relancer toute le code PHP pour éxécuter le petit bout d'API.
-
-- Temps réel / websocket, encore une fois par rapport au coté événementiel de la chose
- 
- ## Pourquoi ne pas utiliser NodeJS?
-
- - Des calculs gourmands en CPU
-
- - Lire / écrire sur le disque. NodeJS est "lent" au niveau des I/O sur le disque
-
- 
-
- ## Une dernière chose 
-
- `Node.js n'est pas un framework. Node.js est un environnement très bas niveau. Il se rapproche donc en quelque sorte plus du C que de PHP, Ruby on Rails ou Django. Voilà pourquoi il n'est pas vraiment conseillé aux débutants.
-Notez qu'il existe des frameworks web comme Express qui sont basés sur Node.js. Ils nous permettent d'éviter les tâches répétitives qui nous sont imposées par la nature bas niveau de Node.js, mais ils restent quand même plus complexes à utiliser que des langages comme PHP. `
-
-(C) OpenClassRoom
+Exercice : faire en sorte que ca affiche le resultat de l'addition dans le retour de l'appel 
