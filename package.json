@@ -1,10 +1,11 @@
 {
   "name": "NodeJS-Formation",
   "version": "1.0.0",
-  "description": "## Introduction",
+  "description": "## Objectif",
   "main": "index.js",
   "dependencies": {
-    "express": "^4.16.2"
+    "express": "^4.16.2",
+    "twig": "^1.10.5"
   },
   "devDependencies": {},
   "scripts": {
