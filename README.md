@@ -1,108 +1,161 @@
-# Avant de commencer
+# A mort les "callback hell"
 
-Faites : 
+La "callback hell" c'est l'enfer de tout programmeur javascript/node.
+
+http://callbackhell.com/
+
+Afin d'éviter ca, les développeurs du moteur Javascript V8 ont inventés les promises.
+
+Une promise (promesse) est une machine à état qui possède 4 états : 
+- en cours
+- resolue
+- rejetée
+- acquitée
+
+Une promise est en cours jusqu'a ce que l'appel asynchrone soit terminé.
+La promesse passe dans un état résolue/rejetée et acquittée. Elle ne repassera plus jamais à "en cours"
+
+L'idée derrière ces promesses, c'est de promettre du code une fois que l'appel asynchrone sera terminé.
+
+Faisons une comparaison de ce qu'on à vu avec les callbacks.
+Avant nous avions ca : 
+
 ```
-cd ~/workspace
-git clone git@github.com:Tyki/NodeJS-Formation.git
-cd NodeJS-Formation
+monAppelAsynchrone = function (cb) {
+  // Je fais de l'asynchrone
+  // Je recupére mes données
+  // J'appelle la callback avec les données
+}
+
+monAppelAsynchrone(function (data) {
+  // Ici, j'ai mes données
+})
+
+// Ici je n'aurais jamais mes données (en faisant de l'asynchrone)
 ```
 
-Nous allons vérifier que votre poste possède node.
-Pour ca, faites un :
+Maintenant nous aurons ca :
+```
+monAppelAsynchrone = function () {
+  //Notez qu'il n'y a plus besoin de fonction de callback
 
-`nvm -h` 
+  return new Promise((resolve, reject) => {
+    // Je fais de l'asynchrone
+    // Je récupere mes données
+    // Je résoud ma promesse avec les données
+    return resolve(...)
+  })
+}
 
-Si vous n'avez NVM, il faut l'installer :
-https://github.com/creationix/nvm/blob/master/README.md#installation
+monAppelAsynchrone()
+.then((données) => {
+  // Ici j'ai mes données
+})
+```
 
-Ce package permettra de choisir facilement votre version de Node que vous souhaitez sur votre poste.
+Je fais une promesse qu'il y aura des données envoyées au retour de l'appel asynchrone.
+Une fois que la promesse est tenue et resolue, le moteur va éxécuter le code qui se trouve dans le `.then`
 
-Nous allons installer Node 6 : 
-`nvm install 6.9.5`
+> Ok et la gestion d'erreur alors?
 
-Vous devriez maintenant pouvoir faire un :
+La gestion d'erreur se fait *presque* de la meme facon. Nous allons modifier l'appel asynchrone plus haut : 
+```
+monAppelAsynchrone = function () {
+  //Notez qu'il n'y a plus besoin de fonction de callback
 
-`node -v`
+  return new Promise((resolve, reject) => {
+    // Je fais de l'asynchrone
+    // Je récupere mes données
+    // Je résoud ma promesse avec les données
 
-$ v6.9.5
+    if (error) {
+      // Je gere mon erreur
+      return reject(error)
+    }
 
+    return resolve(...)
+  })
+}
 
-`npm -v`
+monAppelAsynchrone()
+.then((données) => {
+  // Ici j'ai mes données
+})
+.catch((error) => {
+  // Ici j'ai mon erreur
+})
+```
 
-$ 3.10.10
+Les erreurs se gerent avec un `.catch`. Lorsqu'une promise est rejetée (gestion de cas d'erreurs par exemple), le moteur Javascript va jeter (throw) l'erreur au prochain `catch()` présent dans le code. Ce qui permet d'avoir des gestion d'erreur.
 
-# Le plus simple : un Hello world
+> Et si je dois faire plusieurs appels asynchrone à la suite?
 
-Commencons par quelque chose de simple. Nous allons faire le mythique Hello World en nodeJS
+Une promesse est chainable. Il est donc possible de faire quelque chose de ce genre : 
+```
+monAppelAsynchrone = function () {
+  //Notez qu'il n'y a plus besoin de fonction de callback
 
-Pour ca, créer un fichier index.js. Oui, du JS coté serveur :)
-Vous n'avez plus qu'à afficher sur la sortie standard notre "Hello world"
+  return new Promise((resolve, reject) => {
+    // Je fais de l'asynchrone
+    // Je récupere mes données
+    // Je résoud ma promesse avec les données
 
-Oui mais comment?
-Simplement en faisant un :
+    if (error) {
+      // Je gere mon erreur
+      return reject(error)
+    }
 
-`console.log('Hello world');`
+    return resolve(...)
+  })
+}
 
-Il ne vous reste plus qu'à éxécuter ce script avec Node
+// J'ai besoin des données du premier appel asynchrone
+monSecondAppelAsynchrone = function (données) {
+  return new Promise((resolve, reject) => {
+    if (errr) {
+      return reject(error)
+    }
 
-`node index.js`
+    return resolve(...)
+  })
+}
 
-Vous devriez avoir sur la sortie standard : 
-> Hello world
+monAppelAsynchrone()
+.then((données) => {
+  return monSecondAppelAsynchrone(données)
+})
+.then((secondResultat) => {
+  console.log(secondResultat)
+})
+.catch((error) => {
+  // Ici j'ai mon erreur
+})
+```
 
-Rien de plus simple ! 
+Plusieurs choses ici : 
+- Les promises sont chainées : "Je promet qu'une fois que la premiere promesse est résolue, je fais la seconde promesse". 
+- Il n'y à qu'un seul catch alors qu'il y à deux appels asynchrone : en rejetant une promesse, **l'erreur sera remontée au premier catch rencontré**. 
 
-# Présentation de NodeJS
+Ca implique deux choses : 
+- Soit il faut uniformiser les cas d'erreurs avant de rejeter la promesse. Permettant ainsi que le code du catch soit le meme pour tout les appels asynchrone.
+- Soit il faut faire une gestion d'erreur au cas par cas. Comme évoqué plus haut, l'erreur est remontée autour du premier catch. S'il est nécessaire d'avoir une gestion d'erreur au cas pas cas, il est possible de faire ce code : 
 
-NodeJS, qu'est ce que c'est ?
+monAppelAsynchrone()
+.then((données) => {
+  return monSecondAppelAsynchrone(données)
+})
+.catch((error) => {
+  // Ici je gerer l'appel de mon premier appel asynchrone
 
-> Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine. Node.js uses an event-driven, non-blocking I/O model that makes it lightweight and efficient. Node.js' package ecosystem, npm, is the largest ecosystem of open source libraries in the world.
+  // ATTENTION : les promesses sont chainées. Le moteur va executer le code du premier catch et ensuiter enchainer avec un eventuel .then s'il y en a un.
+})
+.then((secondResultat) => {
+  console.log(secondResultat)
+})
+.catch((error) => {
+  // Ici j'ai mon erreur de mon seocnd appel asynchrone
+})
+```
 
-On peut en extraire plusieurs mots clés :
+C'est rare et plus lourd de faire de la gestion au cas par cas avec les promises qui sont forcement chainées
 
-> JavaScript runtime built
-
-Pas de compilation du code, il est éxécuté au runtime
-
-> Event-driven model
-
-NodeJS est basé sur un système d'événements qui permettent d'avoir et d'effectuer des cycles de vie en fonction de la vie du code. Ca se rapproche du `addEventListener` que l'on pourrait faire dans du JS front.
-
-> non-blocking I/O model
-
-Avec Apache et PHP, un fork va etre mis en place à chaque requête entrante et le code de la requete entrante sera éxécuté dans ce thread (contexte). NodeJS est éxécuté sur un seul et unique thread. Donc admettons qu'on effectue une tache asynchrone, ce n'est pas envisageable de bloquer les autres traitements afin d'attendre le retour de cet appel. C'est pour cela qu'il s'agit d'un model non bloquant.
-
-![](http://www.techthali.org/wp-content/uploads/2012/07/npm8.png)
-
-**J'insiste sur le fait que NodeJS est ASYNCHRONE. Il faut toujours garder à l'esprit que le code est NON-bloquant**
-
-Nous verrons plus tard comment gêrer ce modele non bloquant qui est diffèrent de PHP qui force le coté synchrone par défaut
-
-> Node.js' package ecosystem
-
-La où on a composer avec packagist en PHP, on retrouve dans l'écosysteme Node  l'outil de gestion de package NPM qui permet de faire comme composer mais dans un projet Nodejs
-
-** Ce n'est pas un framework, c'est un langage**
-
- ## Pourquoi utiliser NodeJS?
-
-- Pour le coté Asynchrone, NodeJS étant basé sur de l'événementiel, cela correspond parfaitement pour des traitements avec des appels à des webservices par exemple
-
-- Faire des API. Si on compare une API développée en Symfony vs Node (Ce n'est pas un framework), on va avoir une rapidité de par le fait qu'il ne faut pas relancer toute le code PHP pour éxécuter le petit bout d'API.
-
-- Temps réel / websocket, encore une fois par rapport au coté événementiel de la chose
- 
- ## Pourquoi ne pas utiliser NodeJS?
-
- - Des calculs gourmands en CPU
-
- - Lire / écrire sur le disque. NodeJS est "lent" au niveau des I/O sur le disque
-
- 
-
- ## Une dernière chose 
-
- `Node.js n'est pas un framework. Node.js est un environnement très bas niveau. Il se rapproche donc en quelque sorte plus du C que de PHP, Ruby on Rails ou Django. Voilà pourquoi il n'est pas vraiment conseillé aux débutants.
-Notez qu'il existe des frameworks web comme Express qui sont basés sur Node.js. Ils nous permettent d'éviter les tâches répétitives qui nous sont imposées par la nature bas niveau de Node.js, mais ils restent quand même plus complexes à utiliser que des langages comme PHP. `
-
-(C) OpenClassRoom
