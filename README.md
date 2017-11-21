@@ -140,6 +140,7 @@ Ca implique deux choses :
 - Soit il faut uniformiser les cas d'erreurs avant de rejeter la promesse. Permettant ainsi que le code du catch soit le meme pour tout les appels asynchrone.
 - Soit il faut faire une gestion d'erreur au cas par cas. Comme évoqué plus haut, l'erreur est remontée autour du premier catch. S'il est nécessaire d'avoir une gestion d'erreur au cas pas cas, il est possible de faire ce code : 
 
+```
 monAppelAsynchrone()
 .then((données) => {
   return monSecondAppelAsynchrone(données)
