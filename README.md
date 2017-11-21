@@ -159,3 +159,28 @@ monAppelAsynchrone()
 
 C'est rare et plus lourd de faire de la gestion au cas par cas avec les promises qui sont forcement chainées
 
+# A vous de jouer
+
+Maintenant que vous savez faire une promesse, reprenez le code de l'exercie 4 (branche `exo4-fix`) et transformez les callbacks en promesse de façon à faire un code propre et lisible en promesses.
+
+Attention : il est interdit d'avoir des promises de ce genre : 
+```
+promise
+.then(() => {
+  .then(() => {
+
+  })
+})
+```
+
+Il faut que ce soit : 
+
+```
+promise
+.then(() => {
+
+})
+.then(() => {
+  
+})
+```
